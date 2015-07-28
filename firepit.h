@@ -25,7 +25,9 @@ using namespace std;
 
 class FirePit {
   private:
-    int maxFlames;
+    int 
+      maxFlames,
+      activeFlames;
     float size;
 
     vector<int> flameOffsets;
@@ -37,11 +39,17 @@ class FirePit {
 
   public:
     FirePit(const int s, const int m, const int p[][RGB]);
+    void resetIntensities();
     void pushFlame(Flame * flamePtr, int offset = 0);
+    void setFlame(Flame * flamePtr, int offset = 0);
     void cleanFlames();
+    void stepFlames();
+    void lightFlames();
+    void fire();
     void fireToLED(Adafruit_NeoPixel * neo_strip);
     int getSize();
     int getMaxFlames();
+    int getActiveFlames();
     ~FirePit();
 };
 

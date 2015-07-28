@@ -37,10 +37,15 @@ class Flame {
       dead;
 
     vector<float> flameIntensities;
-    
+
   public:
     Flame(const int w, const float r = 1.0, const float mI = 1.0, const int s = 1);
+    void makeTest();
+    void next();
+    int getWidth();
+    float gaussian(int w);
     bool isDead();
+    vector<float> getIntensities();
     ~Flame();
 };
 

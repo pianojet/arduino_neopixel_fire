@@ -32,12 +32,16 @@ FirePit firepit = FirePit(STRIPSIZE, 1, PALETTE_REG_FIRE);
 
 // arduino logic initialization
 void setup() {
+  Flame * flame = new Flame(5, 0.5, 1.0, 1);
+  flame->makeTest();
+  firepit.pushFlame(flame);
   strip->begin();
   strip->show(); // Initialize all pixels to 'off'
 }
 
 // arduino logic loop
 void loop() {
+  firepit.fire();
   firepit.fireToLED(strip);
   strip->show();
   // testColor(strip.Color(255, 0, 0), 50); // Red
