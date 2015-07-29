@@ -47,7 +47,6 @@ void Flame::makeTest()
 
 void Flame::step()
 {
-  printf("\nFlame step()\n");
   if (this->grow) this->amplitudePercent += this->rage_inc;
   else this->amplitudePercent -= this->rage_inc;
   if (this->amplitudePercent >= 100) this->grow = false;
@@ -57,18 +56,15 @@ void Flame::step()
     this->cycles++;
     if (this->cycles >= this->strength) this->dead = true;
   }
-  printf("ampPct=%f; dead=%d;", this->amplitudePercent, this->dead);
 }
 
 void Flame::newIntensities()
 {
-  printf("\nFlame, newIntensities()\n");
   float percent;
   for (int i = 0; i < this->width; i++)
   {
     percent = this->gaussian(i) * (this->amplitudePercent/100);
     this->flameIntensities[i] = percent;
-    printf(" %f ", percent);
   }
 }
 

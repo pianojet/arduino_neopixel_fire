@@ -72,21 +72,11 @@ void FirePit::resetIntensities()
 
 void FirePit::pushFlame(Flame * flamePtr, int offset)
 {
-  printf("\n#### pushFlame()\n");
-  printf("maxflames: %d\n", this->getMaxFlames());
-  for (int i = 0; i < this->getMaxFlames(); i++)
-  {
-    printf("is flame pointer %d null?", i);
-    if (this->flames[i]) printf("no\n");
-    else printf("yes\n");
-  }
   int c = 0;
   while (this->flames[c] && c < (this->getMaxFlames()-1)) c++;
-  printf("pushing flame to pointer index %d, offset %d\n", c, offset);
   this->flames[c] = flamePtr;
   this->flameOffsets[c] = offset;
   this->activeFlames++;
-  //this->flames.push_back(flamePtr);
 }
 
 void FirePit::setFlame(Flame * flamePtr, int offset)
@@ -210,14 +200,12 @@ int FirePit::getMaxFlames()
   return this->maxFlames;
 }
 
-void fireToLED(Adafruit_NeoPixel * neo_strip);
-
 int FirePit::getActiveFlames()
 {
   return this->activeFlames;
 }
 
-void fireToLED(Adafruit_NeoPixel * neo_strip)
+void FirePit::fireToLED(Adafruit_NeoPixel * neo_strip)
 {
 
 }
