@@ -7,6 +7,11 @@
 |*| Some basic bits taken from 
 |*|   the Adafruit_NeoPixel code for "strandtest"
 \*/
+
+#include <StandardCplusplus.h>
+#include <system_configuration.h>
+#include <unwind-cxx.h>
+#include <utility.h>
 #include <vector>
 #include <math.h>
 

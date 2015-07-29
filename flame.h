@@ -11,6 +11,10 @@
 #ifndef __FLAME_H__
 #define __FLAME_H__
 
+#include <StandardCplusplus.h>
+#include <system_configuration.h>
+#include <unwind-cxx.h>
+#include <utility.h>
 #include <vector>
 
 using namespace std;

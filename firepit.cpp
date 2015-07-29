@@ -8,9 +8,14 @@
 |*|   the Adafruit_NeoPixel code for "strandtest"
 \*/
 
+#include <StandardCplusplus.h>
+#include <system_configuration.h>
+#include <unwind-cxx.h>
+#include <utility.h>
 #include <vector>
 #include <math.h>
 
+#include <Adafruit_NeoPixel.h>
 #include "flame.h"
 #include "firepit.h"
 #include "palette.h"
@@ -205,9 +210,16 @@ int FirePit::getMaxFlames()
   return this->maxFlames;
 }
 
+void fireToLED(Adafruit_NeoPixel * neo_strip);
+
 int FirePit::getActiveFlames()
 {
   return this->activeFlames;
+}
+
+void fireToLED(Adafruit_NeoPixel * neo_strip)
+{
+
 }
 
 vector< vector<int> > FirePit::getPalette()
