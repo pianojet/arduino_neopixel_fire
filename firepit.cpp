@@ -222,9 +222,13 @@ int FirePit::getActiveFlames()
   return this->activeFlames;
 }
 
+// transfer colorValues from pit to strip
 void FirePit::fireToLED(Adafruit_NeoPixel * neo_strip)
 {
-
+  for (int i = 0; i < this->getSize(); i++)
+  {
+    neo_strip->setPixelColor(i, neo_strip->Color(this->colorValueSpan[i][0], this->colorValueSpan[i][1], this->colorValueSpan[i][2]));
+  }
 }
 
 vector< vector<int> > FirePit::getPalette()

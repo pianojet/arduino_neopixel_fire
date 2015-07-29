@@ -23,8 +23,11 @@ using namespace std;
 
 #define PIN 6
 #define STRIPSIZE 60
+#define DELAY 10
 
-// global settings for flame config
+// Global settings for flame parameters and reasonable ranges.
+// mins and maxes (not impl) may be helpful later when
+// user control of flame parameters is desired via controllers.
 int numFlamesLevel = 9;
 int numFlamesMin = 1;
 int numFlamesMax = 12;
@@ -52,10 +55,11 @@ int offsetMax = 31;
 // standard nepixel strip of 60 LEDs
 Adafruit_NeoPixel * strip = new Adafruit_NeoPixel(STRIPSIZE, PIN, NEO_GRB + NEO_KHZ800);
 
-// "firepit" of flames
+// "firepit" container of flames
 FirePit * firepit = new FirePit(STRIPSIZE, 1, PALETTE_REG_FIRE);
 
-// add flame
+// calculate randomized flame parameters using reasonable ranges from above
+// then push to the firepit container
 void addFlame(FirePit * pit)
 {
     int rSize = random(fSizeRange[0], fSizeRange[1]);
@@ -82,6 +86,7 @@ void loop() {
   firepit->fire();
   firepit->fireToLED(strip);
   strip->show();
+  delay(DELAY);
   // testColor(strip.Color(255, 0, 0), 50); // Red
   // testColor(strip.Color(0, 255, 0), 50); // Red
   // testColor(strip.Color(0, 0, 255), 50); // Red
