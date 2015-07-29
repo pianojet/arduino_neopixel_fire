@@ -8,13 +8,9 @@
 |*|   the Adafruit_NeoPixel code for "strandtest"
 \*/
 
-#include <StandardCplusplus.h>
-#include <system_configuration.h>
-#include <unwind-cxx.h>
-#include <utility.h>
 #include <vector>
+#include <math.h>
 
-#include <Adafruit_NeoPixel.h>
 #include "flame.h"
 #include "firepit.h"
 #include "palette.h"
@@ -26,7 +22,7 @@ FirePit::FirePit(const int s, const int m, const int p[][RGB])
 {
   this->activeFlames = 0;
 
-  // init our local pallate vector from basic array arg
+  // init our local palette vector from basic array arg
   for (int i = 0; i < PALETTE_ROWS; i++)
   {
     this->palette.push_back( vector<int>() );
@@ -36,7 +32,6 @@ FirePit::FirePit(const int s, const int m, const int p[][RGB])
     }
   }
 
-  // 
   int zeroRGB[] = {0, 0, 0};
   for (int i = 0; i < this->getSize(); i++)
   {
@@ -72,21 +67,51 @@ void FirePit::resetIntensities()
 
 void FirePit::pushFlame(Flame * flamePtr, int offset)
 {
+  printf("\n#### pushFlame()\n");
+  printf("maxflames: %d\n", this->getMaxFlames());
+  for (int i = 0; i < this->getMaxFlames(); i++)
+  {
+    printf("is flame pointer %d null?", i);
+    if (this->flames[i]) printf("no\n");
+    else printf("yes\n");
+  }
   int c = 0;
   while (this->flames[c] && c < (this->getMaxFlames()-1)) c++;
+  printf("pushing flame to pointer index %d, offset %d\n", c, offset);
   this->flames[c] = flamePtr;
+  this->flameOffsets[c] = offset;
+  this->activeFlames++;
   //this->flames.push_back(flamePtr);
 }
 
-void setFlame(Flame * flamePtr, int offset)
+void FirePit::setFlame(Flame * flamePtr, int offset)
 {
   this->resetIntensities();
   vector<float> flameIntensities = flamePtr->getIntensities();
   for (int i = 0; i < flameIntensities.size(); i++)
   {
-    if (offset+i) < this->intensityValueSpan.size()
+    if ((offset+i) < this->intensityValueSpan.size())
     {
       this->intensityValueSpan[offset+i] = flameIntensities[i];
+    }
+  }
+}
+
+void FirePit::mergeFlame(Flame * flamePtr, int offset)
+{
+  this->mergeIntensities(flamePtr->getIntensities(), offset);
+  this->updateColors();
+}
+
+void FirePit::mergeIntensities(vector<float> intensities, int offset)
+{
+  for (int i = 0; i < intensities.size(); i++)
+  {
+    if ((offset+i) < this->intensityValueSpan.size())
+    {
+      float currentI = this->intensityValueSpan[offset+i];
+      float newI = intensities[i];
+      this->intensityValueSpan[offset+i] = (currentI+newI)/2;
     }
   }
 }
@@ -115,8 +140,21 @@ void FirePit::stepFlames()
 
 void FirePit::lightFlames()
 {
-//  if (this->)
-
+  if (this->activeFlames > 0)
+  {
+    // find a non-null pointer in case the first one was dead and made NULL
+    int c = 0;
+    while (!this->flames[c]) c++;
+    this->setFlame(this->flames[c], this->flameOffsets[c]);
+    c++;
+    for (int i = c; i < this->getMaxFlames(); i++)
+    {
+      if (this->flames[i])
+      {
+        this->mergeFlame(this->flames[i], this->flameOffsets[i]);
+      }
+    }
+  }
 }
 
 void FirePit::fire()
@@ -126,17 +164,35 @@ void FirePit::fire()
   this->lightFlames();
 }
 
-void FirePit::fireToLED(Adafruit_NeoPixel * neo_strip)
+void FirePit::updateColors()
 {
-// // Fill the dots, a la "colorWipe" from strandtest
-// void testColor(uint32_t c, uint8_t wait) {
-//   for(uint16_t i=0; i<strip.numPixels(); i++) {
-//       strip.setPixelColor(i, c);
-//       strip.show();
-//       delay(wait);
-//   }
-// }
+  int paletteIndex = 0;
+  for (int i = 0; i < this->intensityValueSpan.size(); i++)
+  {
+    paletteIndex = floor(this->intensityValueSpan[i] * this->palette.size());
+    if (paletteIndex >= this->palette.size()) paletteIndex = this->palette.size()-1;
+    else if (paletteIndex < 0) paletteIndex = 0;
+    for (int j = 0; j < RGB; j++)
+    {
+      this->colorValueSpan[i][j] = this->palette[paletteIndex][j];
+    }
+  }
+}
 
+void FirePit::printColors()
+{
+  printf("####---- LED COLORS ----####\n");
+  for (int i = 0; i < this->getSize(); i++)
+  {
+    printf("LED %02d  -  ", i);
+    for (int j = 0; j < RGB; j++)
+    {
+        printf("%03d ", this->colorValueSpan[i][j]);
+    }
+    printf("\n");
+  }
+  
+  printf("\n");
 }
 
 int FirePit::getSize()
@@ -152,6 +208,11 @@ int FirePit::getMaxFlames()
 int FirePit::getActiveFlames()
 {
   return this->activeFlames;
+}
+
+vector< vector<int> > FirePit::getPalette()
+{
+  return this->palette;
 }
 
 FirePit::~FirePit()

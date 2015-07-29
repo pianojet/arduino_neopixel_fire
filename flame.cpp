@@ -7,11 +7,6 @@
 |*| Some basic bits taken from 
 |*|   the Adafruit_NeoPixel code for "strandtest"
 \*/
-
-#include <StandardCplusplus.h>
-#include <system_configuration.h>
-#include <unwind-cxx.h>
-#include <utility.h>
 #include <vector>
 #include <math.h>
 
@@ -22,7 +17,7 @@ using namespace std;
 Flame::Flame(const int w, const float r, const float mI, const int s)
   : width(w), rage(r), maxIntense(mI), strength(s)
 {
-  amplitudePercent = 0;
+  amplitudePercent = 0.0;
   grow = true;
   rage_inc = 15*(rage);
   for (int i = 0; i < width; i++)
@@ -35,17 +30,47 @@ Flame::Flame(const int w, const float r, const float mI, const int s)
 
 void Flame::makeTest()
 {
-  int percent;
+  printf("\nFlame, makeTest()\n");
+  float percent;
   for (int i = 0; i < this->width; i++)
   {
     percent = this->gaussian(i);
     this->flameIntensities[i] = percent;
+    printf(" %f ", percent);
+  }
+}
+
+void Flame::step()
+{
+  printf("\nFlame step()\n");
+  if (this->grow) this->amplitudePercent += this->rage_inc;
+  else this->amplitudePercent -= this->rage_inc;
+  if (this->amplitudePercent >= 100) this->grow = false;
+  else if (this->amplitudePercent <= 0)
+  {
+    this->grow = true;
+    this->cycles++;
+    if (this->cycles >= this->strength) this->dead = true;
+  }
+  printf("ampPct=%f; dead=%d;", this->amplitudePercent, this->dead);
+}
+
+void Flame::newIntensities()
+{
+  printf("\nFlame, newIntensities()\n");
+  float percent;
+  for (int i = 0; i < this->width; i++)
+  {
+    percent = this->gaussian(i) * (this->amplitudePercent/100);
+    this->flameIntensities[i] = percent;
+    printf(" %f ", percent);
   }
 }
 
 void Flame::next()
 {
-
+  this->step();
+  this->newIntensities();
 }
 
 int Flame::getWidth()

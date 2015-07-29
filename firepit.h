@@ -11,13 +11,8 @@
 #ifndef __FIREPIT_H__
 #define __FIREPIT_H__
 
-#include <StandardCplusplus.h>
-#include <system_configuration.h>
-#include <unwind-cxx.h>
-#include <utility.h>
 #include <vector>
 
-#include <Adafruit_NeoPixel.h>
 #include "flame.h"
 #include "palette.h"
 
@@ -42,14 +37,18 @@ class FirePit {
     void resetIntensities();
     void pushFlame(Flame * flamePtr, int offset = 0);
     void setFlame(Flame * flamePtr, int offset = 0);
+    void mergeFlame(Flame * flamePtr, int offset = 0);
+    void mergeIntensities(vector<float> intensities, int offset);
     void cleanFlames();
     void stepFlames();
     void lightFlames();
     void fire();
-    void fireToLED(Adafruit_NeoPixel * neo_strip);
+    void updateColors();
+    void printColors();
     int getSize();
     int getMaxFlames();
     int getActiveFlames();
+    vector< vector<int> > getPalette();
     ~FirePit();
 };
 
