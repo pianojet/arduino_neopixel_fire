@@ -24,25 +24,63 @@ using namespace std;
 #define PIN 6
 #define STRIPSIZE 60
 
+// global settings for flame config
+int numFlamesLevel = 9;
+int numFlamesMin = 1;
+int numFlamesMax = 12;
+
+int fSizeRange[] = {4, 10};
+int fSizeMin = 3;
+int fSizeMax = 30;
+
+int rageRange[] = {20, 50};
+int rageMin = 10;
+int rageMax = 100;
+
+int maxIntenseRange[] = {90, 100};
+int maxIntenseMin = 50;
+int maxIntenseMax = 100;
+
+int strengthRange[] = {1, 2};
+int strengthMin = 1;
+int strengthMax = 3;
+
+int offsetRange[] = {0, 31};
+int offsetMin = 0;
+int offsetMax = 31;
+
 // standard nepixel strip of 60 LEDs
 Adafruit_NeoPixel * strip = new Adafruit_NeoPixel(STRIPSIZE, PIN, NEO_GRB + NEO_KHZ800);
 
 // "firepit" of flames
-FirePit firepit = FirePit(STRIPSIZE, 1, PALETTE_REG_FIRE);
+FirePit * firepit = new FirePit(STRIPSIZE, 1, PALETTE_REG_FIRE);
+
+// add flame
+void addFlame(FirePit * pit)
+{
+    int rSize = random(fSizeRange[0], fSizeRange[1]);
+    float rRage = random(rageRange[0], rageRange[1])/100;
+    float rIntense = random(maxIntenseRange[0], maxIntenseRange[1])/100;
+    int rStrength = random(strengthRange[0], strengthRange[1]);
+    int rOffset = random(offsetRange[0], offsetRange[1]);
+
+    pit->pushFlame(new Flame(rSize, rRage, rIntense, rStrength), rOffset);
+}
 
 // arduino logic initialization
 void setup() {
-  Flame * flame = new Flame(5, 0.5, 1.0, 1);
-  flame->makeTest();
-  firepit.pushFlame(flame);
+  Serial.begin(9600);
+  randomSeed(analogRead(0));
+
   strip->begin();
   strip->show(); // Initialize all pixels to 'off'
 }
 
 // arduino logic loop
 void loop() {
-  firepit.fire();
-  firepit.fireToLED(strip);
+  while (firepit->getActiveFlames() < firepit->getMaxFlames()) addFlame(firepit);
+  firepit->fire();
+  firepit->fireToLED(strip);
   strip->show();
   // testColor(strip.Color(255, 0, 0), 50); // Red
   // testColor(strip.Color(0, 255, 0), 50); // Red

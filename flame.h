@@ -19,6 +19,13 @@
 
 using namespace std;
 
+
+// An individual flame that is logically represented by a vector style container
+//   with which the size is the size of the flame, and each intensity value 
+//   represents a percent of brightness.  The intensities have a gaussian distribution
+//   within the size of the vector to mimic a smooth, individual flame.  Each "step" 
+//   will increase the flame intensities to an initialized max, then back down, ebbing
+//   for as long as the given "strength" value. 
 class Flame {
   private:
     int

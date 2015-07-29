@@ -37,6 +37,7 @@ FirePit::FirePit(const int s, const int m, const int p[][RGB])
     }
   }
 
+  // init our containers that track parameters for each LED
   int zeroRGB[] = {0, 0, 0};
   for (int i = 0; i < this->getSize(); i++)
   {
@@ -46,6 +47,7 @@ FirePit::FirePit(const int s, const int m, const int p[][RGB])
     this->paletteIndexSpan.push_back(0);
   }
 
+  // init our flame containers
   for (int i = 0; i < this->getMaxFlames(); i++)
   {
     this->flames.push_back(NULL);
@@ -53,16 +55,12 @@ FirePit::FirePit(const int s, const int m, const int p[][RGB])
   }
 }
 
+// need to provide resetting to avoid value bloat
 void FirePit::resetIntensities()
 {
   int zeroRGB[] = {0, 0, 0};
-  // this->colorValueSpan.clear();
-  // this->intensityValueSpan.clear();
-  // this->paletteIndexSpan.clear();
-
   for (int i = 0; i < this->getSize(); i++)
   {
-    //this->colorValueSpan.push_back( vector<int>() );
     this->colorValueSpan[i].assign(zeroRGB, zeroRGB+RGB);
     this->intensityValueSpan[i] = 0.0;
     this->paletteIndexSpan[i] = 0;
@@ -70,15 +68,28 @@ void FirePit::resetIntensities()
 
 }
 
+// add a flame to the pit where possible
 void FirePit::pushFlame(Flame * flamePtr, int offset)
 {
   int c = 0;
+  // seek valid location
   while (this->flames[c] && c < (this->getMaxFlames()-1)) c++;
+
+  // if we're forcing a push to the end where one already exists...
+  if (this->flames[c])
+  {
+    delete this->flames[c];
+  }
+  else this->activeFlames++;
+
+  // assign the flame
   this->flames[c] = flamePtr;
   this->flameOffsets[c] = offset;
-  this->activeFlames++;
 }
 
+// resets pit intensities and adds a flame.
+// designed to be followed by merges in order to
+// fully account for all flames correctly
 void FirePit::setFlame(Flame * flamePtr, int offset)
 {
   this->resetIntensities();
@@ -92,10 +103,10 @@ void FirePit::setFlame(Flame * flamePtr, int offset)
   }
 }
 
+// merge given flame into the existing span of intensities
 void FirePit::mergeFlame(Flame * flamePtr, int offset)
 {
   this->mergeIntensities(flamePtr->getIntensities(), offset);
-  this->updateColors();
 }
 
 void FirePit::mergeIntensities(vector<float> intensities, int offset)
@@ -111,6 +122,7 @@ void FirePit::mergeIntensities(vector<float> intensities, int offset)
   }
 }
 
+// remove all dead flames
 void FirePit::cleanFlames()
 {
   for (int i = 0; i < this->getMaxFlames(); i++)
@@ -125,6 +137,7 @@ void FirePit::cleanFlames()
   }
 }
 
+// increment flame intensities
 void FirePit::stepFlames()
 {
   for (int i = 0; i < this->getMaxFlames(); i++)
@@ -133,6 +146,8 @@ void FirePit::stepFlames()
   }
 }
 
+// accounts for setting the entire span of intensities using
+// flames in container
 void FirePit::lightFlames()
 {
   if (this->activeFlames > 0)
@@ -157,8 +172,10 @@ void FirePit::fire()
   this->cleanFlames();
   this->stepFlames();
   this->lightFlames();
+  this->updateColors();
 }
 
+// translate intensities into specific colors from given palette
 void FirePit::updateColors()
 {
   int paletteIndex = 0;

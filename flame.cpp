@@ -33,6 +33,7 @@ Flame::Flame(const int w, const float r, const float mI, const int s)
   dead = false;
 }
 
+// produces a maximum intensity for the flame, useful for test
 void Flame::makeTest()
 {
   printf("\nFlame, makeTest()\n");
@@ -45,6 +46,11 @@ void Flame::makeTest()
   }
 }
 
+// processing for how to alter the flame.
+// We need to choose whether to increase or decrease the
+// intensity, whether to render the flame dead, and determine what
+// relative amplitude the flame's gaussian distribution will be
+// (which translates to the intensity later)
 void Flame::step()
 {
   if (this->grow) this->amplitudePercent += this->rage_inc;
@@ -58,6 +64,8 @@ void Flame::step()
   }
 }
 
+// assign intensities using a gaussian distribution based on intended
+// amplitude power
 void Flame::newIntensities()
 {
   float percent;
@@ -79,6 +87,8 @@ int Flame::getWidth()
   return this->width;
 }
 
+// gaussian function using Flame's own parameters to smooth
+// the flame intensities.
 float Flame::gaussian(int w)
 {
   float m = 6.0 - (5.0*this->maxIntense);// Math.sqrt(2 * Math.PI);

@@ -17,6 +17,10 @@ static const int RGB = 3;
 
 // Global palettes can be defined here; each palette can define a color style for the fire,
 // e.g. blue fire, green fire, etc.  Only red is defined below, currently.
+//
+// Palette arrays, index 0 to MAX, represent a scale of intensity from lowest to highest,
+//   respectively.
+//
 // Using basic C arrays for the visual clarity during initialization, they copy over
 // to vectors just fine later.
 static const int PALETTE_REG_FIRE[PALETTE_ROWS][RGB] = 
