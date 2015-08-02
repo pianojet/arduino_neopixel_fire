@@ -8,18 +8,10 @@
 |*|   the Adafruit_NeoPixel code for "strandtest"
 \*/
 
-#include <StandardCplusplus.h>
-#include <system_configuration.h>
-#include <unwind-cxx.h>
-#include <utility.h>
-#include <vector>
-
 #include <Adafruit_NeoPixel.h>
 #include "flame.h"
 #include "firepit.h"
 #include "palette.h"
-
-using namespace std;
 
 #define PIN 6
 #define STRIPSIZE 60
@@ -62,11 +54,11 @@ FirePit * firepit = new FirePit(STRIPSIZE, 1, PALETTE_REG_FIRE);
 // then push to the firepit container
 void addFlame(FirePit * pit)
 {
-    int rSize = random(fSizeRange[0], fSizeRange[1]);
-    float rRage = random(rageRange[0], rageRange[1])/100;
-    float rIntense = random(maxIntenseRange[0], maxIntenseRange[1])/100;
-    int rStrength = random(strengthRange[0], strengthRange[1]);
-    int rOffset = random(offsetRange[0], offsetRange[1]);
+    uint8_t rSize = random(fSizeRange[0], fSizeRange[1]);
+    uint8_t rRage = random(rageRange[0], rageRange[1]);
+    uint8_t rIntense = random(maxIntenseRange[0], maxIntenseRange[1]);
+    uint8_t rStrength = random(strengthRange[0], strengthRange[1]);
+    uint8_t rOffset = random(offsetRange[0], offsetRange[1]);
 
     pit->pushFlame(new Flame(rSize, rRage, rIntense, rStrength), rOffset);
 }

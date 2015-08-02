@@ -1,18 +1,13 @@
 /*\
-|*| Author: 
+|*| Author:
 |*|   Justin Taylor
 |*|   pianojet@gmail.com
 |*|   July 2015
 |*|
-|*| Some basic bits taken from 
+|*| Some basic bits taken from
 |*|   the Adafruit_NeoPixel code for "strandtest"
 \*/
 
-#include <StandardCplusplus.h>
-#include <system_configuration.h>
-#include <unwind-cxx.h>
-#include <utility.h>
-#include <vector>
 #include <math.h>
 
 #include <Adafruit_NeoPixel.h>
@@ -20,223 +15,211 @@
 #include "firepit.h"
 #include "palette.h"
 
-using namespace std;
 
-FirePit::FirePit(const int s, const int m, const int p[][RGB])
-  : size(s), maxFlames(m)
+FirePit::FirePit(const uint8_t s, const uint8_t m, const uint8_t p[][RGB])
+: size(s), maxFlames(m)
 {
-  this->activeFlames = 0;
-
-  // init our local palette vector from basic array arg
-  for (int i = 0; i < PALETTE_ROWS; i++)
-  {
-    this->palette.push_back( vector<int>() );
-    for (int j = 0; j < RGB; j++)
+    //this->palette = p;
+    this->activeFlames = 0;
+    
+    // init our local palette vector from basic array arg
+    for (uint8_t i = 0; i < PALETTE_ROWS; i++)
     {
-      this->palette[i].push_back(p[i][j]);
+        for (uint8_t j = 0; j < RGB; j++)
+        {
+            this->palette[i][j] = p[i][j];
+        }
     }
-  }
-
-  // init our containers that track parameters for each LED
-  int zeroRGB[] = {0, 0, 0};
-  for (int i = 0; i < this->getSize(); i++)
-  {
-    this->colorValueSpan.push_back( vector<int>() );
-    this->colorValueSpan[i].assign(zeroRGB, zeroRGB+RGB);
-    this->intensityValueSpan.push_back(0.0);
-    this->paletteIndexSpan.push_back(0);
-  }
-
-  // init our flame containers
-  for (int i = 0; i < this->getMaxFlames(); i++)
-  {
-    this->flames.push_back(NULL);
-    this->flameOffsets.push_back(-1);
-  }
+    
+    // init our containers that track parameters for each LED
+    this->colorValueSpan = new uint8_t [size*RGB];
+    this->intensityValueSpan = new uint8_t [size];
+    this->resetIntensities();
+    
+    // init our flame containers
+    this->flames = new Flame* [maxFlames];
+    this->flameOffsets = new int8_t [maxFlames];
+    for (uint8_t i = 0; i < this->getMaxFlames(); i++)
+    {
+        this->flames[i] = NULL;
+        this->flameOffsets[i] = -1;
+    }
 }
 
 // need to provide resetting to avoid value bloat
 void FirePit::resetIntensities()
 {
-  int zeroRGB[] = {0, 0, 0};
-  for (int i = 0; i < this->getSize(); i++)
-  {
-    this->colorValueSpan[i].assign(zeroRGB, zeroRGB+RGB);
-    this->intensityValueSpan[i] = 0.0;
-    this->paletteIndexSpan[i] = 0;
-  }
-
+    for (uint8_t i = 0; i < this->getSize(); i++)
+    {
+        uint8_t rgbIndex = i*RGB;
+        this->colorValueSpan[rgbIndex] = this->colorValueSpan[rgbIndex+1] = this->colorValueSpan[rgbIndex+2] = 0;
+        this->intensityValueSpan[i] = 0;
+    }
 }
 
 // add a flame to the pit where possible
-void FirePit::pushFlame(Flame * flamePtr, int offset)
+void FirePit::pushFlame(Flame * flamePtr, int8_t offset)
 {
-  int c = 0;
-  // seek valid location
-  while (this->flames[c] && c < (this->getMaxFlames()-1)) c++;
+    int c = 0;
+    // seek valid location
+    while (this->flames[c] && c < (this->getMaxFlames()-1))
+    {
+        c++;
+    }
 
-  // if we're forcing a push to the end where one already exists...
-  if (this->flames[c])
-  {
-    delete this->flames[c];
-  }
-  else this->activeFlames++;
-
-  // assign the flame
-  this->flames[c] = flamePtr;
-  this->flameOffsets[c] = offset;
+    // if we're forcing a push to the end where one already exists...
+    if (this->flames[c])
+    {
+        delete this->flames[c];
+    }
+    else 
+    {
+        this->activeFlames++;
+    }
+    
+    // assign the flame
+    this->flames[c] = flamePtr;
+    this->flameOffsets[c] = offset;
 }
 
 // resets pit intensities and adds a flame.
 // designed to be followed by merges in order to
 // fully account for all flames correctly
-void FirePit::setFlame(Flame * flamePtr, int offset)
+void FirePit::setFlame(Flame * flamePtr, uint8_t offset)
 {
-  this->resetIntensities();
-  vector<float> flameIntensities = flamePtr->getIntensities();
-  for (int i = 0; i < flameIntensities.size(); i++)
-  {
-    if ((offset+i) < this->intensityValueSpan.size())
+    this->resetIntensities();
+    for (uint8_t i = 0; i < flamePtr->getSize(); i++)
     {
-      this->intensityValueSpan[offset+i] = flameIntensities[i];
+        uint8_t thisIndex = offset+i;
+        if (thisIndex < this->getSize())
+        {
+            this->intensityValueSpan[thisIndex] = (*flamePtr)[i];
+        }
     }
-  }
 }
 
 // merge given flame into the existing span of intensities
-void FirePit::mergeFlame(Flame * flamePtr, int offset)
+void FirePit::mergeFlame(Flame * flamePtr, uint8_t offset)
 {
-  this->mergeIntensities(flamePtr->getIntensities(), offset);
-}
-
-void FirePit::mergeIntensities(vector<float> intensities, int offset)
-{
-  for (int i = 0; i < intensities.size(); i++)
-  {
-    if ((offset+i) < this->intensityValueSpan.size())
+    for (uint8_t i = 0; i < flamePtr->getSize(); i++)
     {
-      float currentI = this->intensityValueSpan[offset+i];
-      float newI = intensities[i];
-      this->intensityValueSpan[offset+i] = (currentI+newI)/2;
+        uint8_t thisIndex = offset+i;
+        if (thisIndex < this->getSize())
+        {
+            uint8_t currentI = this->intensityValueSpan[thisIndex];
+            uint8_t newI = (*flamePtr)[i];
+            uint8_t newValue = round((currentI+newI)/2);
+            this->intensityValueSpan[thisIndex] = newValue;
+        }
     }
-  }
+
 }
 
 // remove all dead flames
 void FirePit::cleanFlames()
 {
-  for (int i = 0; i < this->getMaxFlames(); i++)
-  {
-    if (this->flames[i]->isDead())
+    for (uint8_t i = 0; i < this->getMaxFlames(); i++)
     {
-      delete this->flames[i];
-      this->flames[i] = NULL;
-      this->flameOffsets[i] = -1;
-      this->activeFlames--;
+        if (this->flames[i] && this->flames[i]->isDead())
+        {
+            delete this->flames[i];
+            this->flames[i] = NULL;
+            this->flameOffsets[i] = -1;
+            this->activeFlames--;
+        }
     }
-  }
 }
 
 // increment flame intensities
 void FirePit::stepFlames()
 {
-  for (int i = 0; i < this->getMaxFlames(); i++)
-  {
-    if (this->flames[i]) this->flames[i]->next();
-  }
+    for (uint8_t i = 0; i < this->getMaxFlames(); i++)
+    {
+        if (this->flames[i])
+        {
+            this->flames[i]->next();
+        }
+    }
 }
 
 // accounts for setting the entire span of intensities using
 // flames in container
 void FirePit::lightFlames()
 {
-  if (this->activeFlames > 0)
-  {
-    // find a non-null pointer in case the first one was dead and made NULL
-    int c = 0;
-    while (!this->flames[c]) c++;
-    this->setFlame(this->flames[c], this->flameOffsets[c]);
-    c++;
-    for (int i = c; i < this->getMaxFlames(); i++)
+    if (this->activeFlames > 0)
     {
-      if (this->flames[i])
-      {
-        this->mergeFlame(this->flames[i], this->flameOffsets[i]);
-      }
+        uint8_t c = 0;
+        // seek for a non-null pointer in case the first one was dead and made NULL
+        while (!this->flames[c]) c++;
+        this->setFlame(this->flames[c], this->flameOffsets[c]);
+        c++;
+        for (uint8_t i = c; i < this->getMaxFlames(); i++)
+        {
+            if (this->flames[i]) // test again, multiple flames may have 'burned out' after the c index
+            {
+                this->mergeFlame(this->flames[i], this->flameOffsets[i]);
+            }
+        }
     }
-  }
 }
 
 void FirePit::fire()
 {
-  this->cleanFlames();
-  this->stepFlames();
-  this->lightFlames();
-  this->updateColors();
+    this->cleanFlames();
+    this->stepFlames();
+    this->lightFlames();
+    this->updateColors();
 }
 
 // translate intensities into specific colors from given palette
 void FirePit::updateColors()
 {
-  int paletteIndex = 0;
-  for (int i = 0; i < this->intensityValueSpan.size(); i++)
-  {
-    paletteIndex = floor(this->intensityValueSpan[i] * this->palette.size());
-    if (paletteIndex >= this->palette.size()) paletteIndex = this->palette.size()-1;
-    else if (paletteIndex < 0) paletteIndex = 0;
-    for (int j = 0; j < RGB; j++)
+    uint8_t paletteIndex = 0;
+    for (uint8_t i = 0; i < this->getSize(); i++)
     {
-      this->colorValueSpan[i][j] = this->palette[paletteIndex][j];
+        uint8_t rgbIndex = i*RGB;
+        // the lowest row in palette matches 0% intensity, and highest row matches 100% intensity
+        paletteIndex = floor((this->intensityValueSpan[i]/100.0) * PALETTE_ROWS);
+
+        // ensure valid bounds
+        if (paletteIndex >= PALETTE_ROWS) paletteIndex = PALETTE_ROWS-1;
+        else if (paletteIndex < 0) paletteIndex = 0;
+        for (uint8_t j = 0; j < RGB; j++)
+        {
+            this->colorValueSpan[rgbIndex+j] = this->palette[paletteIndex][j];
+        }
     }
-  }
 }
 
-void FirePit::printColors()
+uint8_t FirePit::getSize()
 {
-  printf("####---- LED COLORS ----####\n");
-  for (int i = 0; i < this->getSize(); i++)
-  {
-    printf("LED %02d  -  ", i);
-    for (int j = 0; j < RGB; j++)
-    {
-        printf("%03d ", this->colorValueSpan[i][j]);
-    }
-    printf("\n");
-  }
-  
-  printf("\n");
+    return this->size;
 }
 
-int FirePit::getSize()
+uint8_t FirePit::getMaxFlames()
 {
-  return this->size;
+    return this->maxFlames;
 }
 
-int FirePit::getMaxFlames()
+uint8_t FirePit::getActiveFlames()
 {
-  return this->maxFlames;
-}
-
-int FirePit::getActiveFlames()
-{
-  return this->activeFlames;
+    return this->activeFlames;
 }
 
 // transfer colorValues from pit to strip
 void FirePit::fireToLED(Adafruit_NeoPixel * neo_strip)
 {
-  for (int i = 0; i < this->getSize(); i++)
-  {
-    neo_strip->setPixelColor(i, neo_strip->Color(this->colorValueSpan[i][0], this->colorValueSpan[i][1], this->colorValueSpan[i][2]));
-  }
-}
-
-vector< vector<int> > FirePit::getPalette()
-{
-  return this->palette;
+    for (uint8_t i = 0; i < this->getSize(); i++)
+    {
+        uint8_t rgbIndex = i*RGB;
+        neo_strip->setPixelColor(i, neo_strip->Color(this->colorValueSpan[rgbIndex], this->colorValueSpan[rgbIndex+1], this->colorValueSpan[rgbIndex+2]));
+    }
 }
 
 FirePit::~FirePit()
 {
-
+    delete[] this->colorValueSpan;    
+    delete[] this->flames;
+    delete[] this->flameOffsets;
+    delete[] this->intensityValueSpan;
 }
