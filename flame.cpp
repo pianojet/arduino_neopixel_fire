@@ -15,12 +15,12 @@
 
 
 Flame::Flame(const uint8_t w, const uint8_t r, const uint8_t mI, const uint8_t s)
-: size(w), rage(r), maxIntense(mI), strength(s)
+: size(w), strength(s)
 {
     amplitudePercent = 0;
     grow = true;
-    rage = round(15*(rage/100.0));
-    maxIntense = maxIntense/100.0;
+    rage = round(15*(r/100.0));
+    maxIntense = mI/100.0;
     this->flameIntensities = new uint8_t [size];
     for (uint8_t i = 0; i < size; i++)
     {

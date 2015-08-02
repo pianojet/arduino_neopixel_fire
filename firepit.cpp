@@ -178,6 +178,7 @@ void FirePit::updateColors()
     for (uint8_t i = 0; i < this->getSize(); i++)
     {
         uint8_t rgbIndex = i*RGB;
+
         // the lowest row in palette matches 0% intensity, and highest row matches 100% intensity
         paletteIndex = floor((this->intensityValueSpan[i]/100.0) * PALETTE_ROWS);
 
@@ -187,6 +188,7 @@ void FirePit::updateColors()
         for (uint8_t j = 0; j < RGB; j++)
         {
             this->colorValueSpan[rgbIndex+j] = this->palette[paletteIndex][j];
+            
         }
     }
 }

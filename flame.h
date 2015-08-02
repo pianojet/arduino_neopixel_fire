@@ -29,7 +29,8 @@ private:
         size,
         strength,
         cycles,
-        amplitudePercent,
+        amplitudePercent;
+    float
         rage,
         maxIntense;
 
